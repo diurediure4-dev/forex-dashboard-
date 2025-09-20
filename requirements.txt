@@ -1,0 +1,5 @@
+streamlit
+websocket-client
+pandas
+numpy
+altair
