@@ -1,4 +1,4 @@
-# app.py
+# app.py (fixed)
 import streamlit as st
 import websocket
 import threading
@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 import json
 from datetime import datetime, timezone
-import collections, time, os, csv
+import collections, time, os, csv, io
 import altair as alt
 
 # ---------------- CONFIG ----------------
@@ -277,7 +277,7 @@ def stop_all():
 def simulate_from_csv(file_bytes, speed=1.0):
     try:
         s = file_bytes.read().decode("utf-8")
-        df = pd.read_csv(pd.compat.StringIO(s))
+        df = pd.read_csv(io.StringIO(s))
     except Exception:
         try:
             df = pd.read_csv(file_bytes)
@@ -306,7 +306,7 @@ def simulate_from_csv(file_bytes, speed=1.0):
             if st.session_state.stop_event.is_set(): break
             rel = (row['__ts_ms'] - start)/1000.0
             time.sleep(max(0.0, rel / max(0.01, speed)))
-            msg = json.dumps({"symbol": str(row['symbol']), "bid": float(row['bid']), "ask': float(row['ask']), "timestamp": int(row['__ts_ms'])})
+            msg = json.dumps({"symbol": str(row['symbol']), "bid": float(row['bid']), "ask": float(row['ask']), "timestamp": int(row['__ts_ms'])})
             try:
                 st.session_state.mq.put_nowait(msg)
             except queue.Full:
@@ -320,7 +320,7 @@ def simulate_from_csv(file_bytes, speed=1.0):
 left, right = st.columns([3,1])
 with right:
     st.subheader("Controls")
-    default_key = st.secrets.get("TRADERMADE_KEY", "") if hasattr(st, "secrets") else ""
+    default_key = st.secrets["TRADERMADE_KEY"] if "TRADERMADE_KEY" in st.secrets else ""
     api_in = st.text_input("TraderMade API Key (or 'mock')", type="password", value=default_key)
     uploaded = st.file_uploader("Upload CSV to simulate (timestamp,symbol,bid,ask)", type=["csv"])
     if st.button("Start (WS or Mock)"):
